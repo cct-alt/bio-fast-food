@@ -10,12 +10,12 @@ export default class MainMenu extends Phaser.Scene {
         let loadingText = this.add.text(400, 300, '資源載入中... 請稍候', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '32px', fill: '#ffffff' }).setOrigin(0.5);
         this.load.on('loaderror', (fileObj) => { console.error('❌ 圖片載入失敗:', fileObj.key, '路徑:', fileObj.url); });
         this.load.on('complete', () => { loadingText.destroy(); });
-        this.load.image('main_bg', 'src/assets/main_bg.jpg');
-        this.load.image('recipe1', 'src/assets/recipe1.png');
-        this.load.image('recipe2', 'src/assets/recipe2.png');
-        this.load.image('recipe3', 'src/assets/recipe3.png');
-        this.load.image('recipe4', 'src/assets/recipe4.png');
-        this.load.image('recipe5', 'src/assets/recipe5.png');
+        this.load.image('main_bg', 'main_bg.jpg');
+        this.load.image('recipe1', 'recipe1.png');
+        this.load.image('recipe2', 'recipe2.png');
+        this.load.image('recipe3', 'recipe3.png');
+        this.load.image('recipe4', 'recipe4.png');
+        this.load.image('recipe5', 'recipe5.png');
     }
 
     create() {
