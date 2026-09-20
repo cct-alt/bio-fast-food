@@ -508,16 +508,37 @@ export default class OrderManager {
             });
 
             if (scene.requiresMonomerAssembly || (scene.currentOrder && scene.currentOrder.id === 'dna_double_strand')) {
-                scene.activeFrames.forEach(frame => {
-                    frame.isMet = false;
-                    frame.rect.setStrokeStyle(2, 0x95a5a6);
-                    frame.status.setText('未完成').setColor('#e74c3c');
-                });
+                // 🌟 針對 DNA 雙股螺旋出錯，強制重置回步驟 1
+                if (scene.currentOrder.id === 'dna_double_strand') {
+                    scene.currentOrder.dnaStage = 1;
+                    scene.requiresMonomerAssembly = true;
+                    scene.framesLayer.removeAll(true);
+                    scene.activeFrames = [];
+                    // 重新建立左鏈的單體提示框
+                    let bL1 = scene.currentOrder.targetSequenceLeft[0];
+                    let bL2 = scene.currentOrder.targetSequenceLeft[1];
+                    this.createFrame('dna_nucleotide', bL1, `左鏈單體 1\n(${this.fmtBase(bL1)})`, 130, 130, 200, 280);
+                    this.createFrame('dna_nucleotide', bL2, `左鏈單體 2\n(${this.fmtBase(bL2)})`, 130, 130, 360, 280);
+                    scene.currentOrder.instructionText = scene.add.text(400, 200, '步驟 1: 依照提示框，組合「左鏈」需要的 2 個單體', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#34495e', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+                    scene.framesLayer.add(scene.currentOrder.instructionText);
+                } else {
+                    // 原本處理其他多肽、單體的邏輯
+                    scene.activeFrames.forEach(frame => {
+                        frame.isMet = false;
+                        frame.rect.setStrokeStyle(2, 0x95a5a6);
+                        frame.status.setText('未完成').setColor('#e74c3c');
+                    });
+                }
 
                 scene.workspaceItems.forEach(i => {
-                    if (i.type === 'Container') i.isValidatedMonomer = false;
+                    if (i.type === 'Container') {
+                        i.isValidatedMonomer = false;
+                        i.isLockedChain = false; // 解除 DNA 可能的鎖定狀態
+                        if (!i.isOriginal && i.list && i.list[0]) i.list[0].clearTint();
+                    }
                 });
             }
+
         }
     }
 }

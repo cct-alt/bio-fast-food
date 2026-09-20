@@ -572,7 +572,7 @@ export default class MainScene extends Phaser.Scene {
             box.lineStyle(2, 0x3498db, 1); box.strokeRoundedRect(-35, -45, 70, 90, 8);
             box.setPosition(cx, cy);
 
-            let nameText = this.add.text(cx, cy - 35, data.name, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '11px', fill: '#333333', fontStyle: 'bold' }).setOrigin(0.5);
+            let nameText = this.add.text(cx, cy - 35, data.name, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '14px', fill: '#333333', fontStyle: 'bold' }).setOrigin(0.5);
 
             let container = this.spawnIngredient(cx, cy + 10, data, true);
 
@@ -817,45 +817,28 @@ export default class MainScene extends Phaser.Scene {
         this.add.text(400, 180, `💰 總營業額: $${this.score}`, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '28px', fill: '#27ae60', fontStyle: 'bold' }).setOrigin(0.5).setDepth(1002);
         this.add.text(400, 220, `🔥 最高連擊數: ${this.maxCombo} Combo`, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '20px', fill: '#e74c3c', fontStyle: 'bold' }).setOrigin(0.5).setDepth(1002);
 
-        let parentNode = this.sys.game.canvas.parentNode;
-        parentNode.style.position = 'relative';
+        // 🌟 改變作法：用 Phaser 畫出假的「輸入框按鈕」，點擊後彈出原生輸入視窗
+        this.add.text(280, 300, '班別:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
+        this.add.text(280, 360, '學號:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
 
-        let createSelect = (options, x, y) => {
-            let select = document.createElement('select');
-            // 移除原本的 absolute, left, top，讓 Phaser 自動接管位置與縮放
-            select.style.fontSize = '22px';
-            select.style.padding = '5px 10px';
-            select.style.borderRadius = '8px';
-            select.style.cursor = 'pointer';
-            select.style.fontFamily = '"微軟正黑體", sans-serif';
-            select.style.fontWeight = 'bold';
-            select.style.outline = 'none'; // 讓選單外觀更乾淨
+        let classVal = "4A";
+        let numVal = "1";
 
-            options.forEach(optVal => {
-                let opt = document.createElement('option');
-                opt.value = optVal;
-                opt.innerText = optVal;
-                select.appendChild(opt);
-            });
+        let classBtnBg = this.add.rectangle(400, 300, 200, 40, 0xffffff).setInteractive({ useHandCursor: true }).setDepth(1002);
+        let classTxt = this.add.text(400, 300, classVal, { fontSize: '22px', fill: '#000' }).setOrigin(0.5).setDepth(1003);
 
-            // 🌟 關鍵修改：使用 Phaser 的 DOM 功能，它會自動死死黏在遊戲座標上！
-            // setOrigin(0, 0.5) 取代了原本的 translateY(-50%)
-            let domElement = this.add.dom(x, y, select).setOrigin(0, 0.5).setDepth(1005);
+        let numBtnBg = this.add.rectangle(400, 360, 200, 40, 0xffffff).setInteractive({ useHandCursor: true }).setDepth(1002);
+        let numTxt = this.add.text(400, 360, numVal, { fontSize: '22px', fill: '#000' }).setOrigin(0.5).setDepth(1003);
 
-            // 綁定起來方便後面銷毀
-            select.phaserDom = domElement;
-            return select;
-        };
-
-
-        this.add.text(350, 300, '班別:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
-        this.add.text(350, 360, '學號:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
-
-        const classes = ['4A', '4B', '4C', '4D', '5A', '5B', '5C', '5D', '6A', '6B', '6C', '6D'];
-        let classSelect = createSelect(classes, 370, 300);
-
-        const numbers = Array.from({ length: 40 }, (_, i) => i + 1);
-        let numSelect = createSelect(numbers, 370, 360);
+        // 點擊後彈出系統預設的輸入框 (絕不跑位)
+        classBtnBg.on('pointerdown', () => {
+            let input = prompt("請輸入班別 (例如 4A, 5B)：", classVal);
+            if (input) { classVal = input; classTxt.setText(classVal); }
+        });
+        numBtnBg.on('pointerdown', () => {
+            let input = prompt("請輸入學號 (1~40)：", numVal);
+            if (input) { numVal = input; numTxt.setText(numVal); }
+        });
 
         let statusMsg = this.add.text(400, 420, '', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#2ecc71', fontStyle: 'bold' }).setOrigin(0.5).setDepth(1002);
         let submitBtn = this.add.text(400, 480, '📤 上傳分數', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '26px', fill: '#ffffff', backgroundColor: '#e67e22', padding: { x: 20, y: 10 }, borderRadius: 8 }).setOrigin(0.5).setDepth(1002).setInteractive({ useHandCursor: true });
@@ -865,28 +848,15 @@ export default class MainScene extends Phaser.Scene {
             submitBtn.disableInteractive();
             submitBtn.setAlpha(0.5);
             statusMsg.setText('上傳中...').setColor('#f1c40f');
-
-            let selectedClass = classSelect.value;
-            let selectedNum = numSelect.value;
-            let result = await saveScore(selectedClass, selectedNum, this.score);
-
+            let result = await saveScore(classVal, numVal, this.score);
             statusMsg.setText(result).setColor(result.includes('失敗') ? '#e74c3c' : '#2ecc71');
-            returnBtn.setInteractive();
         });
 
         returnBtn.on('pointerdown', () => {
-            if (classSelect) {
-                if (classSelect.phaserDom) classSelect.phaserDom.destroy();
-                classSelect.remove();
-            }
-            if (numSelect) {
-                if (numSelect.phaserDom) numSelect.phaserDom.destroy();
-                numSelect.remove();
-            }
             this.scene.start('MainMenu');
         });
-
     }
+
 
     showRecipes() {
         this.recipePopupContainer.removeAll(true);
