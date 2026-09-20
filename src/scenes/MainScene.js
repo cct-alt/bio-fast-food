@@ -73,7 +73,7 @@ export default class MainScene extends Phaser.Scene {
         this.maxCombo = 0;
         this.isGameActive = true;
 
-        this.gameTimeMax = 240000;
+        this.gameTimeMax = 180000;
         this.gameTimeLeft = this.gameTimeMax;
 
         this.gameTimerText = this.add.text(400, 35, '⏳ 04:00', {
