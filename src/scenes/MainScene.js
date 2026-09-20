@@ -572,7 +572,7 @@ export default class MainScene extends Phaser.Scene {
             box.lineStyle(2, 0x3498db, 1); box.strokeRoundedRect(-35, -45, 70, 90, 8);
             box.setPosition(cx, cy);
 
-            let nameText = this.add.text(cx, cy - 35, data.name, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '14px', fill: '#333333', fontStyle: 'bold' }).setOrigin(0.5);
+            let nameText = this.add.text(cx, cy - 35, data.name, { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#333333', fontStyle: 'bold' }).setOrigin(0.5);
 
             let container = this.spawnIngredient(cx, cy + 10, data, true);
 
