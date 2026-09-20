@@ -822,17 +822,14 @@ export default class MainScene extends Phaser.Scene {
 
         let createSelect = (options, x, y) => {
             let select = document.createElement('select');
-            select.style.position = 'absolute';
-            select.style.left = `${x}px`;
-            select.style.top = `${y}px`;
-            select.style.transform = 'translateY(-50%)';
+            // 移除原本的 absolute, left, top，讓 Phaser 自動接管位置與縮放
             select.style.fontSize = '22px';
             select.style.padding = '5px 10px';
             select.style.borderRadius = '8px';
-            select.style.zIndex = '1000';
             select.style.cursor = 'pointer';
             select.style.fontFamily = '"微軟正黑體", sans-serif';
             select.style.fontWeight = 'bold';
+            select.style.outline = 'none'; // 讓選單外觀更乾淨
 
             options.forEach(optVal => {
                 let opt = document.createElement('option');
@@ -841,9 +838,15 @@ export default class MainScene extends Phaser.Scene {
                 select.appendChild(opt);
             });
 
-            parentNode.appendChild(select);
+            // 🌟 關鍵修改：使用 Phaser 的 DOM 功能，它會自動死死黏在遊戲座標上！
+            // setOrigin(0, 0.5) 取代了原本的 translateY(-50%)
+            let domElement = this.add.dom(x, y, select).setOrigin(0, 0.5).setDepth(1005);
+
+            // 綁定起來方便後面銷毀
+            select.phaserDom = domElement;
             return select;
         };
+
 
         this.add.text(350, 300, '班別:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
         this.add.text(350, 360, '學號:', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '24px', fill: '#ffffff', fontStyle: 'bold' }).setOrigin(1, 0.5).setDepth(1002);
@@ -872,10 +875,17 @@ export default class MainScene extends Phaser.Scene {
         });
 
         returnBtn.on('pointerdown', () => {
-            if (classSelect) classSelect.remove();
-            if (numSelect) numSelect.remove();
+            if (classSelect) {
+                if (classSelect.phaserDom) classSelect.phaserDom.destroy();
+                classSelect.remove();
+            }
+            if (numSelect) {
+                if (numSelect.phaserDom) numSelect.phaserDom.destroy();
+                numSelect.remove();
+            }
             this.scene.start('MainMenu');
         });
+
     }
 
     showRecipes() {
