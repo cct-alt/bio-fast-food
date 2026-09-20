@@ -12,30 +12,33 @@ export default class MainScene extends Phaser.Scene {
 
     preload() {
         console.log('準備載入遊戲素材...');
-        this.load.image('glucose', '/glucose.png');
-        this.load.image('fructose', '/fructose.png');
-        this.load.image('galactose', '/galactose.png');
-        this.load.image('glycerol', '/glycerol.png');
-        this.load.image('fatty_acid', '/fatty_acid.png');
-        this.load.image('phosphate_group', '/phosphate_group.png');
-        this.load.image('carboxyl_group', '/carboxyl_group.png');
-        this.load.image('amino_group', '/amino_group.png');
-        this.load.image('carbon', '/carbon.png');
+
+        this.load.image('glucose', 'glucose.png');
+        this.load.image('fructose', 'fructose.png');
+        this.load.image('galactose', 'galactose.png');
+        this.load.image('glycerol', 'glycerol.png');
+        this.load.image('fatty_acid', 'fatty_acid.png');
+        this.load.image('phosphate_group', 'phosphate_group.png');
+        this.load.image('carboxyl_group', 'carboxyl_group.png');
+        this.load.image('amino_group', 'amino_group.png');
+        this.load.image('carbon', 'carbon.png');
 
         for (let i = 1; i <= 20; i++) {
             let num = i < 10 ? '0' + i : i.toString();
-            this.load.image(`side_chain_${num}`, `/side_chain_${num}.png`);
+            // 這裡的斜線也移除了
+            this.load.image(`side_chain_${num}`, `side_chain_${num}.png`);
         }
 
-        this.load.image('base_a', '/base_a.png');
-        this.load.image('base_t', '/base_t.png');
-        this.load.image('base_c', '/base_c.png');
-        this.load.image('base_g', '/base_g.png');
-        this.load.image('base_u', '/base_u.png');
-        this.load.image('ribose', '/ribose.png');
-        this.load.image('deoxyribose', '/deoxyribose.png');
-        this.load.image('phosphate_group_nucleotide', '/phosphate_group_nucleotide.png');
+        this.load.image('base_a', 'base_a.png');
+        this.load.image('base_t', 'base_t.png');
+        this.load.image('base_c', 'base_c.png');
+        this.load.image('base_g', 'base_g.png');
+        this.load.image('base_u', 'base_u.png');
+        this.load.image('ribose', 'ribose.png');
+        this.load.image('deoxyribose', 'deoxyribose.png');
+        this.load.image('phosphate_group_nucleotide', 'phosphate_group_nucleotide.png');
     }
+
 
     create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
