@@ -2,18 +2,23 @@ import Phaser from 'phaser';
 import MainMenu from './scenes/MainMenu.js';
 import MainScene from './scenes/MainScene.js';
 
+// main.js
 const config = {
   type: Phaser.AUTO,
-  // 將原本的 width 和 height 移入 scale 設定中
   scale: {
-    mode: Phaser.Scale.FIT, // 自動縮放以適應螢幕，並保持比例
-    autoCenter: Phaser.Scale.CENTER_BOTH, // 水平與垂直置中
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
     width: 800,
     height: 600,
     parent: 'game-container'
   },
-  backgroundColor: '#ffffff',
+  backgroundColor: '#f0f0f0',
+  // 🔽 加入這一段，限制單指觸控，防止手掌邊緣誤觸干擾
+  input: {
+    activePointers: 1,
+  },
   scene: [MainMenu, MainScene]
 };
+
 
 const game = new Phaser.Game(config);
