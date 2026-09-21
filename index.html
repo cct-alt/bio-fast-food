@@ -3,51 +3,33 @@
 
 <head>
   <meta charset="UTF-8" />
-  <!-- 更新 viewport 設定：防止雙指縮放，並讓畫面貼齊螢幕邊緣 -->
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>生命分子快餐店</title>
   <style>
-    /* 重置基礎樣式 */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html,
-    body {
-      width: 100%;
-      /* 將 100vh 改為 100dvh，這是解決 Safari 工具列遮擋的關鍵 */
-      height: 100dvh;
+    html, body {
+      width: 100%; height: 100dvh;
       background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      
-      /* 🌟 關鍵防護：徹底殺死 Safari 的下拉更新與左右滑動換頁手勢 */
-      overscroll-behavior: none;
-      
-      /* 防止 iPad 拖曳分子時網頁跟著滑動、反白文字 */
-      overflow: hidden;
-      touch-action: none;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
+      display: flex; justify-content: center; align-items: center;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      overscroll-behavior: none; overflow: hidden;
+      touch-action: none; -webkit-touch-callout: none;
+      -webkit-user-select: none; user-select: none;
     }
 
     #game-container {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 100%; height: 100%;
+      display: flex; justify-content: center; align-items: center;
+    }
+
+    /* 🌟 針對遊戲畫布的終極禁令：不准反白、不准閃爍、不准啟動任何系統手勢 */
+    canvas {
+      touch-action: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+      outline: none !important;
     }
   </style>
 </head>
@@ -57,13 +39,15 @@
   <script type="module" src="/src/main.js"></script>
   
   <script>
-    // 防止 Safari 預設的雙擊放大、彈性捲動與邊緣手勢干擾
-    document.addEventListener('touchmove', function (event) {
-      if (event.scale !== 1) {
-        event.preventDefault(); // 防止縮放
-      }
-      event.preventDefault(); // 阻擋原生的滑動
-    }, { passive: false });
+    // 🌟 核彈級防護：在最底層攔截所有觸控開始與移動，徹底封殺 iOS 系統手勢
+    const killIOSGestures = (e) => {
+      // 由於我們的輸入是透過原生 prompt() 彈出，所以可以安心地把網頁上的原生觸控全部殺掉
+      e.preventDefault();
+    };
+    
+    // 必須加上 passive: false 才能強制攔截
+    document.addEventListener('touchstart', killIOSGestures, { passive: false });
+    document.addEventListener('touchmove', killIOSGestures, { passive: false });
   </script>
 </body>
 

@@ -40,31 +40,31 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-    create() {
+        create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
 
         // ==========================================
-        // 🌟 終極解法：移除所有死鎖機制，改用「緊急放下 (Emergency Drop)」
-        // 只要 Safari 調皮中斷了觸控，我們就讓分子安全落地，絕對不鎖死！
+        // 🌟 終極自癒機制：如果發生任何系統干擾，強制重置 Phaser 所有的觸控點
         // ==========================================
-        const emergencyDrop = () => {
+        const resetAllTouches = () => {
+            // 這是 Phaser 內建的最強重置指令，清空所有幽靈觸控
+            this.input.manager.resetPointers();
+            
+            // 安全放下所有分子
             this.workspaceItems.forEach(item => {
                 if (item && item.type === 'Container') {
-                    if (item.moleculeGroup) {
-                        item.moleculeGroup.forEach(g => { if (g.setDepth) g.setDepth(1); });
-                    }
-                    if (item.list && item.list.length > 0 && !item.isLockedChain) {
-                        item.list[0].clearTint();
-                    }
+                    if (item.moleculeGroup) item.moleculeGroup.forEach(g => { if (g.setDepth) g.setDepth(1); });
+                    if (item.list && item.list.length > 0 && !item.isLockedChain) item.list[0].clearTint();
                 }
             });
             if (this.previewLine) this.previewLine.clear();
             this.currentSnap = null;
         };
 
-        this.input.on('pointerupoutside', emergencyDrop);
-        this.input.on('pointercancel', emergencyDrop);
-        this.input.on('gameout', emergencyDrop);
+        // 當觸控被系統取消、滑出界外、或遊戲失去焦點時，立刻重置！
+        this.input.on('pointercancel', resetAllTouches);
+        this.input.on('pointerupoutside', resetAllTouches);
+        this.input.on('gameout', resetAllTouches);
         // ==========================================
 
         const grid = this.add.graphics();
@@ -196,9 +196,6 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
-        // ==========================================
-        // 🌟 拖曳移動事件 (drag)
-        // ==========================================
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
             if (gameObject.type !== 'Container' || gameObject.isOriginal) return;
             let dx = dragX - gameObject.x; let dy = dragY - gameObject.y;
@@ -285,9 +282,6 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
-        // ==========================================
-        // 🌟 開始拖曳事件 (dragstart)
-        // ==========================================
         this.input.on('dragstart', (pointer, gameObject) => {
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
@@ -320,9 +314,6 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
-        // ==========================================
-        // 🌟 結束拖曳事件 (dragend)
-        // ==========================================
         this.input.on('dragend', (pointer, gameObject) => {
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
@@ -561,6 +552,7 @@ export default class MainScene extends Phaser.Scene {
             }
         });
     }
+
 
 
 
