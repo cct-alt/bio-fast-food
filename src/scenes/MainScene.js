@@ -40,51 +40,31 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-        create() {
+    create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
 
-        // 🌟 1. 宣告變數，用來記住是哪根手指/筆在拖曳
-        let activePointerId = null;
-
-        // 🌟 2. 終極解鎖機制：不管發生什麼事，只要觸控結束或被中斷，強制解除鎖定！
-        const forceRelease = (pointer) => {
-            if (activePointerId === pointer.id) {
-                activePointerId = null;
-            }
+        // ==========================================
+        // 🌟 終極解法：移除所有死鎖機制，改用「緊急放下 (Emergency Drop)」
+        // 只要 Safari 調皮中斷了觸控，我們就讓分子安全落地，絕對不鎖死！
+        // ==========================================
+        const emergencyDrop = () => {
+            this.workspaceItems.forEach(item => {
+                if (item && item.type === 'Container') {
+                    if (item.moleculeGroup) {
+                        item.moleculeGroup.forEach(g => { if (g.setDepth) g.setDepth(1); });
+                    }
+                    if (item.list && item.list.length > 0 && !item.isLockedChain) {
+                        item.list[0].clearTint();
+                    }
+                }
+            });
+            if (this.previewLine) this.previewLine.clear();
+            this.currentSnap = null;
         };
 
-        // 正常放開
-        this.input.on('pointerup', forceRelease);
-        
-        // 滑到畫布外面放開
-        this.input.on('pointerupoutside', (pointer) => {
-            forceRelease(pointer);
-            this.input.emit('pointerup', pointer); // 彌補 Phaser 偶爾漏掉的判定
-        });
-        
-        // 被 Safari 系統強制中斷 (微中斷)
-        this.input.on('pointercancel', (pointer) => {
-            forceRelease(pointer);
-            this.input.emit('pointerup', pointer);
-        });
-
-        // 如果瀏覽器突然失去焦點 (例如跳出低電量通知、鬧鐘)
-        this.input.on('gameout', () => { 
-            activePointerId = null; 
-        });
-
-        // ==========================================
-        // 🌟 3. 幽靈鎖定自癒機制：如果手指卡死了，點擊新的一下就能瞬間解鎖
-        // ==========================================
-        this.input.on('pointerdown', (pointer) => {
-            if (activePointerId !== null && activePointerId !== pointer.id) {
-                let lockedPointer = this.input.manager.pointers.find(p => p.id === activePointerId);
-                if (!lockedPointer || !lockedPointer.isDown) {
-                    console.log("👻 偵測到幽靈鎖定，已強制解鎖！");
-                    activePointerId = null;
-                }
-            }
-        });
+        this.input.on('pointerupoutside', emergencyDrop);
+        this.input.on('pointercancel', emergencyDrop);
+        this.input.on('gameout', emergencyDrop);
         // ==========================================
 
         const grid = this.add.graphics();
@@ -99,7 +79,7 @@ export default class MainScene extends Phaser.Scene {
         this.add.text(20, 55, '💡 提示：在分子上「連續點擊兩下」可反轉 180 度', { fontSize: '14px', fill: '#e67e22', fontStyle: 'bold', backgroundColor: '#fff3e0', padding: { x: 8, y: 4 } });
 
         this.score = 0;
-        this.scoreText = this.add.text(20, 95, '💰 營業額: \$0', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '22px', fill: '#27ae60', fontStyle: 'bold', backgroundColor: '#e8f8f5', padding: { x: 10, y: 5 }, borderRadius: 8 });
+        this.scoreText = this.add.text(20, 95, '💰 營業額: $0', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '22px', fill: '#27ae60', fontStyle: 'bold', backgroundColor: '#e8f8f5', padding: { x: 10, y: 5 }, borderRadius: 8 });
 
         let recipeBtn = this.add.text(20, 140, '📚 查看食譜', {
             fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#ffffff',
@@ -220,8 +200,6 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 拖曳移動事件 (drag)
         // ==========================================
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            if (activePointerId !== null && activePointerId !== pointer.id) return;
-
             if (gameObject.type !== 'Container' || gameObject.isOriginal) return;
             let dx = dragX - gameObject.x; let dy = dragY - gameObject.y;
 
@@ -311,11 +289,6 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 開始拖曳事件 (dragstart)
         // ==========================================
         this.input.on('dragstart', (pointer, gameObject) => {
-            if (activePointerId !== null && activePointerId !== pointer.id) {
-                return;
-            }
-            activePointerId = pointer.id; 
-
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(10); });
@@ -351,11 +324,6 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 結束拖曳事件 (dragend)
         // ==========================================
         this.input.on('dragend', (pointer, gameObject) => {
-            if (activePointerId !== null) {
-                if (activePointerId !== pointer.id) return; 
-                activePointerId = null;
-            }
-
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(1); });
@@ -593,6 +561,7 @@ export default class MainScene extends Phaser.Scene {
             }
         });
     }
+
 
 
 
