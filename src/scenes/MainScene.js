@@ -40,8 +40,20 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-    create() {
+        create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
+
+        // 🌟 1. 防凍結機制：攔截 Safari 的強制中斷事件，模擬成正常放開
+        this.input.on('pointercancel', (pointer) => {
+            this.input.emit('pointerup', pointer);
+        });
+        this.input.on('pointerupoutside', (pointer) => {
+            this.input.emit('pointerup', pointer);
+        });
+
+        // 🌟 2. 宣告變數，用來記住是哪根手指/筆在拖曳
+        let activePointerId = null;
+
         const grid = this.add.graphics();
         grid.lineStyle(1, 0xe0e6ed, 1);
         for (let i = 0; i < 800; i += 40) {
@@ -171,7 +183,13 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 拖曳移動事件 (drag)
+        // ==========================================
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+            // 🌟 鎖定觸控點：只有被鎖定的那支筆/手指，才可以改變物件座標
+            if (activePointerId !== null && activePointerId !== pointer.id) return;
+
             if (gameObject.type !== 'Container' || gameObject.isOriginal) return;
             let dx = dragX - gameObject.x; let dy = dragY - gameObject.y;
 
@@ -190,24 +208,21 @@ export default class MainScene extends Phaser.Scene {
                             let cAngle = item.carboxyl.img.angle % 360 !== 0 ? -1 : 1;
                             let aAngle = item.amino.img.angle % 360 !== 0 ? -1 : 1;
 
-                            // 取得中心點座標
                             let cx = item.carboxyl.x + (item.cOffset.x * cAngle);
                             let cy = item.carboxyl.y + (item.cOffset.y * cAngle);
                             let ax = item.amino.x + (item.aOffset.x * aAngle);
                             let ay = item.amino.y + (item.aOffset.y * aAngle);
 
-                            // 👉 這裡的 8 代表紅線向外延伸的長度。如果覺得線太長可以改成 6 或 5
                             item.lineBetween(cx - 8, cy + 8, cx + 8, cy - 8);
                             item.lineBetween(ax - 8, ay + 8, ax + 8, ay - 8);
                         }
-
                     }
                 });
             }
 
             this.previewLine.clear();
             this.currentSnap = null;
-            let closestDistance = 40; // 👉 圖案變小，這裡磁吸寬容度調小一些比較剛好
+            let closestDistance = 40; 
             let draggingGroup = gameObject.moleculeGroup || [gameObject];
 
             gameObject.moleculeGroup.forEach(groupItem => {
@@ -260,7 +275,16 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 開始拖曳事件 (dragstart)
+        // ==========================================
         this.input.on('dragstart', (pointer, gameObject) => {
+            // 🌟 鎖定觸控點：如果已經有筆/手指在拖曳了，且新碰到螢幕的 ID 不同 (例如手掌肉)，直接擋掉！
+            if (activePointerId !== null && activePointerId !== pointer.id) {
+                return;
+            }
+            activePointerId = pointer.id; // 綁定這根筆/手指
+
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(10); });
@@ -271,7 +295,6 @@ export default class MainScene extends Phaser.Scene {
                 gameObject.list[0].setTint(0xaaaaaa);
                 gameObject.magnets.forEach(m => { if (!m.isUsed) m.visual.setVisible(true); });
 
-                // 👉 這裡徹底修復了拖拉放大的問題！強制綁定在 WS_SCALE (0.6)
                 let WS_SCALE = 0.6;
                 gameObject.img.setScale(gameObject.itemData.scale * WS_SCALE);
                 gameObject.img.x = gameObject.itemData.imageOffset ? gameObject.itemData.imageOffset.x * WS_SCALE : 0;
@@ -293,7 +316,16 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 結束拖曳事件 (dragend)
+        // ==========================================
         this.input.on('dragend', (pointer, gameObject) => {
+            // 🌟 解除鎖定：放開時，確認是鎖定的那支筆，才解除鎖定
+            if (activePointerId !== null) {
+                if (activePointerId !== pointer.id) return; // 擋掉手掌造成的假放開
+                activePointerId = null;
+            }
+
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(1); });
@@ -370,7 +402,7 @@ export default class MainScene extends Phaser.Scene {
                                     let keyB = targetItem.textureKey;
                                     let isDNAPair = keyA.startsWith('base_') && keyB.startsWith('base_');
 
-                                    if (isPrimarySnap || (isDNAPair && dist < 40)) { // 👉 寬容度調小，避免因為圖形變小誤判
+                                    if (isPrimarySnap || (isDNAPair && dist < 40)) { 
                                         bondedPairs.add(pairId);
                                         dragMag.isUsed = true; targetMag.isUsed = true;
                                         dragMag.visual.setVisible(false); targetMag.visual.setVisible(false);
@@ -415,7 +447,6 @@ export default class MainScene extends Phaser.Scene {
                                             redSlash.carboxyl = keyA === 'carboxyl_group' ? dragItem : targetItem;
                                             redSlash.amino = keyA === 'amino_group' ? dragItem : targetItem;
 
-                                            // 讀取已經根據工作區縮放過的 strikeOffset 座標
                                             redSlash.cOffset = redSlash.carboxyl.strikeOffset;
                                             redSlash.aOffset = redSlash.amino.strikeOffset;
 
@@ -423,20 +454,16 @@ export default class MainScene extends Phaser.Scene {
                                             let cAngle = redSlash.carboxyl.img.angle % 360 !== 0 ? -1 : 1;
                                             let aAngle = redSlash.amino.img.angle % 360 !== 0 ? -1 : 1;
 
-                                            // 取得中心點座標
                                             let kx = redSlash.carboxyl.x + (redSlash.cOffset.x * cAngle);
                                             let ky = redSlash.carboxyl.y + (redSlash.cOffset.y * cAngle);
                                             let kx2 = redSlash.amino.x + (redSlash.aOffset.x * aAngle);
                                             let ky2 = redSlash.amino.y + (redSlash.aOffset.y * aAngle);
 
-                                            // 👉 這裡的 8 決定剛連上時紅線的長度
                                             redSlash.lineBetween(kx - 8, ky + 8, kx + 8, ky - 8);
                                             redSlash.lineBetween(kx2 - 8, ky2 + 8, kx2 + 8, ky2 - 8);
                                             redSlash.setDepth(5);
                                             redSlashes.push(redSlash);
                                         }
-
-
                                     }
                                 });
                             });
@@ -536,6 +563,7 @@ export default class MainScene extends Phaser.Scene {
             }
         });
     }
+
 
     // 👉 強制將錯誤提示文字顯示在畫面上方中央 (Y=150)，且強制置中不斷行出界
     showFeedbackText(x, y, text, color) {
