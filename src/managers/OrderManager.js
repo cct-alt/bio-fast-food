@@ -507,24 +507,45 @@ export default class OrderManager {
                 scene.tweens.add({ targets: item, x: item.x - 150, duration: 300, ease: 'Back.easeOut' });
             });
 
-            if (scene.requiresMonomerAssembly || (scene.currentOrder && scene.currentOrder.id === 'dna_double_strand')) {
-                // 🌟 針對 DNA 雙股螺旋出錯，強制重置回步驟 1
+                        if (scene.requiresMonomerAssembly || (scene.currentOrder && scene.currentOrder.id === 'dna_double_strand')) {
+                
                 if (scene.currentOrder.id === 'dna_double_strand') {
-                    scene.currentOrder.dnaStage = 1;
+                    // 🌟 判斷出錯在哪個階段，精準決定退回哪一步！
+                    if (scene.currentOrder.dnaStage === 2) {
+                        scene.currentOrder.dnaStage = 1; // 錯在左鏈，退回檢查左1左2
+                    } else if (scene.currentOrder.dnaStage === 4) {
+                        scene.currentOrder.dnaStage = 3; // 錯在右鏈，退回檢查右1右2
+                    } else if (scene.currentOrder.dnaStage === 5) {
+                        scene.currentOrder.dnaStage = 1; // 雙鏈結合失敗 (兩條都毀了)，只能退回原點
+                    }
+
                     scene.requiresMonomerAssembly = true;
                     scene.framesLayer.removeAll(true);
                     scene.activeFrames = [];
-                    // 重新建立左鏈的單體提示框
-                    let bL1 = scene.currentOrder.targetSequenceLeft[0];
-                    let bL2 = scene.currentOrder.targetSequenceLeft[1];
-                    this.createFrame('dna_nucleotide', bL1, `左鏈單體 1\n(${this.fmtBase(bL1)})`, 130, 130, 200, 280);
-                    this.createFrame('dna_nucleotide', bL2, `左鏈單體 2\n(${this.fmtBase(bL2)})`, 130, 130, 360, 280);
-                    scene.currentOrder.instructionText = scene.add.text(400, 200, '步驟 1: 依照提示框，組合「左鏈」需要的 2 個單體', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#34495e', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
-                    scene.framesLayer.add(scene.currentOrder.instructionText);
+
+                    // 🌟 根據退回的階段，重新生成對應的檢查框
+                    if (scene.currentOrder.dnaStage === 1) {
+                        let bL1 = scene.currentOrder.targetSequenceLeft[0];
+                        let bL2 = scene.currentOrder.targetSequenceLeft[1];
+                        // 依照您的專案寫法，可能是 scene.createFrame 或是 this.scene.createFrame
+                        // 這裡統一使用 scene.createFrame 來呼叫
+                        scene.createFrame('dna_nucleotide', bL1, `左鏈單體 1\n(${scene.fmtBase(bL1)})`, 130, 130, 200, 280);
+                        scene.createFrame('dna_nucleotide', bL2, `左鏈單體 2\n(${scene.fmtBase(bL2)})`, 130, 360, 200, 280);
+                        scene.currentOrder.instructionText = scene.add.text(400, 200, '步驟 1: 依照提示框，組合「左鏈」需要的 2 個單體', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#34495e', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+                        scene.framesLayer.add(scene.currentOrder.instructionText);
+                    } else if (scene.currentOrder.dnaStage === 3) {
+                        let bR1 = scene.currentOrder.targetSequenceRight[0];
+                        let bR2 = scene.currentOrder.targetSequenceRight[1];
+                        scene.createFrame('dna_nucleotide', bR1, `右鏈單體 1\n(${scene.fmtBase(bR1)})`, 130, 130, 200, 280);
+                        scene.createFrame('dna_nucleotide', bR2, `右鏈單體 2\n(${scene.fmtBase(bR2)})`, 130, 360, 200, 280);
+                        scene.currentOrder.instructionText = scene.add.text(400, 200, '步驟 3: 依照提示框，組合「右鏈」需要的 2 個單體\n(注意方向必須與左鏈相反)', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#34495e', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+                        scene.framesLayer.add(scene.currentOrder.instructionText);
+                    }
                 } else {
-                    // 原本處理其他多肽、單體的邏輯
+                    // 一般多肽/單體出錯時的重置
                     scene.activeFrames.forEach(frame => {
                         frame.isMet = false;
+                        frame.satisfiedBy = null; // 🌟 記得清除記錄
                         frame.rect.setStrokeStyle(2, 0x95a5a6);
                         frame.status.setText('未完成').setColor('#e74c3c');
                     });
@@ -533,11 +554,12 @@ export default class OrderManager {
                 scene.workspaceItems.forEach(i => {
                     if (i.type === 'Container') {
                         i.isValidatedMonomer = false;
-                        i.isLockedChain = false; // 解除 DNA 可能的鎖定狀態
+                        i.isLockedChain = false; // 解除可能被錯誤鎖定的鏈
                         if (!i.isOriginal && i.list && i.list[0]) i.list[0].clearTint();
                     }
                 });
             }
+
 
         }
     }

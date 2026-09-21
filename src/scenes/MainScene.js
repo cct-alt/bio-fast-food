@@ -284,6 +284,18 @@ export default class MainScene extends Phaser.Scene {
 
         this.input.on('dragstart', (pointer, gameObject) => {
             if (gameObject.type !== 'Container') return;
+            let group = gameObject.moleculeGroup || [gameObject];
+            if (this.activeFrames) {
+                this.activeFrames.forEach(frame => {
+                    if (frame.satisfiedBy === group[0]) {
+                        frame.isMet = false;
+                        frame.satisfiedBy = null;
+                        frame.rect.setStrokeStyle(2, 0x95a5a6);
+                        frame.status.setText('未完成').setColor('#e74c3c');
+                        group.forEach(gItem => gItem.isValidatedMonomer = false);
+                    }
+                });
+            }
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(10); });
             }
@@ -520,10 +532,27 @@ export default class MainScene extends Phaser.Scene {
                 let groupCx = (minX + maxX) / 2;
                 let groupCy = (minY + maxY) / 2;
 
+                            if (this.requiresMonomerAssembly || (this.currentOrder && this.currentOrder.id === 'dna_double_strand')) {
+                let draggingGroup = gameObject.moleculeGroup;
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                draggingGroup.forEach(g => {
+                    if (g.type === 'Container') { minX = Math.min(minX, g.x); maxX = Math.max(maxX, g.x); minY = Math.min(minY, g.y); maxY = Math.max(maxY, g.y); }
+                });
+                let groupCx = (minX + maxX) / 2;
+                let groupCy = (minY + maxY) / 2;
+
+                // 🌟 新增：確保一個分子只能滿足「一個」檢查框
+                let claimed = false; 
+
                 this.activeFrames.forEach(frame => {
+                    if (claimed) return; // 如果這個分子剛剛已經填滿了某個框，就不准再觸發第二個！
+
                     let inBounds = Math.abs(groupCx - frame.x) < (frame.width / 2) && Math.abs(groupCy - frame.y) < (frame.height / 2);
 
                     if (inBounds) {
+                        // 🌟 新增：如果這個檢查框已經被「其他」分子佔用了，就不准覆蓋它！
+                        if (frame.isMet && frame.satisfiedBy && frame.satisfiedBy !== draggingGroup[0]) return;
+
                         let statusCheck = 0;
                         if (frame.monomerType === 'dna_chain') {
                             statusCheck = this.orderManager.checkDinucleotide(draggingGroup, frame.base1, frame.base2) ? 1 : -1;
@@ -533,6 +562,9 @@ export default class MainScene extends Phaser.Scene {
 
                         if (statusCheck === 1 && !frame.isMet) {
                             frame.isMet = true;
+                            frame.satisfiedBy = draggingGroup[0]; // 🌟 記錄這個框是被「誰」滿足的
+                            claimed = true; // 🌟 標記這個分子已經用掉了
+                            
                             frame.rect.setStrokeStyle(4, 0x2ecc71);
                             frame.status.setText('✅ 已完成').setColor('#2ecc71');
                             draggingGroup.forEach(gItem => gItem.isValidatedMonomer = true);
@@ -544,11 +576,14 @@ export default class MainScene extends Phaser.Scene {
                             }
                         } else if (statusCheck === -1) {
                             frame.isMet = false;
+                            frame.satisfiedBy = null; // 🌟 清除記錄
                             frame.rect.setStrokeStyle(4, 0xe74c3c);
                             frame.status.setText('❌ 錯位').setColor('#e74c3c');
                         }
                     }
                 });
+            }
+
             }
         });
     }
