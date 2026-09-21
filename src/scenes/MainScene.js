@@ -40,7 +40,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-            create() {
+        create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
 
         // 🌟 1. 宣告變數，用來記住是哪根手指/筆在拖曳
@@ -72,7 +72,21 @@ export default class MainScene extends Phaser.Scene {
         this.input.on('gameout', () => { 
             activePointerId = null; 
         });
-        
+
+        // ==========================================
+        // 🌟 3. 幽靈鎖定自癒機制：如果手指卡死了，點擊新的一下就能瞬間解鎖
+        // ==========================================
+        this.input.on('pointerdown', (pointer) => {
+            if (activePointerId !== null && activePointerId !== pointer.id) {
+                let lockedPointer = this.input.manager.pointers.find(p => p.id === activePointerId);
+                if (!lockedPointer || !lockedPointer.isDown) {
+                    console.log("👻 偵測到幽靈鎖定，已強制解鎖！");
+                    activePointerId = null;
+                }
+            }
+        });
+        // ==========================================
+
         const grid = this.add.graphics();
         grid.lineStyle(1, 0xe0e6ed, 1);
         for (let i = 0; i < 800; i += 40) {
@@ -206,7 +220,6 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 拖曳移動事件 (drag)
         // ==========================================
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-            // 🌟 鎖定觸控點：只有被鎖定的那支筆/手指，才可以改變物件座標
             if (activePointerId !== null && activePointerId !== pointer.id) return;
 
             if (gameObject.type !== 'Container' || gameObject.isOriginal) return;
@@ -298,11 +311,10 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 開始拖曳事件 (dragstart)
         // ==========================================
         this.input.on('dragstart', (pointer, gameObject) => {
-            // 🌟 鎖定觸控點：如果已經有筆/手指在拖曳了，且新碰到螢幕的 ID 不同 (例如手掌肉)，直接擋掉！
             if (activePointerId !== null && activePointerId !== pointer.id) {
                 return;
             }
-            activePointerId = pointer.id; // 綁定這根筆/手指
+            activePointerId = pointer.id; 
 
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
@@ -339,9 +351,8 @@ export default class MainScene extends Phaser.Scene {
         // 🌟 結束拖曳事件 (dragend)
         // ==========================================
         this.input.on('dragend', (pointer, gameObject) => {
-            // 🌟 解除鎖定：放開時，確認是鎖定的那支筆，才解除鎖定
             if (activePointerId !== null) {
-                if (activePointerId !== pointer.id) return; // 擋掉手掌造成的假放開
+                if (activePointerId !== pointer.id) return; 
                 activePointerId = null;
             }
 
@@ -582,6 +593,7 @@ export default class MainScene extends Phaser.Scene {
             }
         });
     }
+
 
 
     // 👉 強制將錯誤提示文字顯示在畫面上方中央 (Y=150)，且強制置中不斷行出界
