@@ -40,20 +40,39 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-        create() {
+            create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
 
-        // 🌟 1. 防凍結機制：攔截 Safari 的強制中斷事件，模擬成正常放開
-        this.input.on('pointercancel', (pointer) => {
-            this.input.emit('pointerup', pointer);
-        });
-        this.input.on('pointerupoutside', (pointer) => {
-            this.input.emit('pointerup', pointer);
-        });
-
-        // 🌟 2. 宣告變數，用來記住是哪根手指/筆在拖曳
+        // 🌟 1. 宣告變數，用來記住是哪根手指/筆在拖曳
         let activePointerId = null;
 
+        // 🌟 2. 終極解鎖機制：不管發生什麼事，只要觸控結束或被中斷，強制解除鎖定！
+        const forceRelease = (pointer) => {
+            if (activePointerId === pointer.id) {
+                activePointerId = null;
+            }
+        };
+
+        // 正常放開
+        this.input.on('pointerup', forceRelease);
+        
+        // 滑到畫布外面放開
+        this.input.on('pointerupoutside', (pointer) => {
+            forceRelease(pointer);
+            this.input.emit('pointerup', pointer); // 彌補 Phaser 偶爾漏掉的判定
+        });
+        
+        // 被 Safari 系統強制中斷 (微中斷)
+        this.input.on('pointercancel', (pointer) => {
+            forceRelease(pointer);
+            this.input.emit('pointerup', pointer);
+        });
+
+        // 如果瀏覽器突然失去焦點 (例如跳出低電量通知、鬧鐘)
+        this.input.on('gameout', () => { 
+            activePointerId = null; 
+        });
+        
         const grid = this.add.graphics();
         grid.lineStyle(1, 0xe0e6ed, 1);
         for (let i = 0; i < 800; i += 40) {

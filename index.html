@@ -25,7 +25,10 @@
       justify-content: center;
       align-items: center;
 
-      /* 關鍵：防止 iPad 拖曳分子時網頁跟著滑動、下拉更新或反白文字 */
+      /* 🌟 關鍵防護：徹底殺死 Safari 的下拉更新與左右滑動換頁手勢 */
+      overscroll-behavior: none;
+      
+      /* 防止 iPad 拖曳分子時網頁跟著滑動、反白文字 */
       overflow: hidden;
       touch-action: none;
       -webkit-touch-callout: none;
@@ -46,15 +49,16 @@
 <body>
   <div id="game-container"></div>
   <script type="module" src="/src/main.js"></script>
-<script>
-  // 防止 Safari 預設的雙擊放大、彈性捲動與邊緣手勢干擾
-  document.addEventListener('touchmove', function (event) {
-    if (event.scale !== 1) {
-      event.preventDefault(); // 防止縮放
-    }
-    event.preventDefault(); // 阻擋原生的滑動
-  }, { passive: false });
-</script>
+  
+  <script>
+    // 防止 Safari 預設的雙擊放大、彈性捲動與邊緣手勢干擾
+    document.addEventListener('touchmove', function (event) {
+      if (event.scale !== 1) {
+        event.preventDefault(); // 防止縮放
+      }
+      event.preventDefault(); // 阻擋原生的滑動
+    }, { passive: false });
+  </script>
 </body>
 
 </html>
