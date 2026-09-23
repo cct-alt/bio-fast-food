@@ -538,8 +538,10 @@ export default class MainScene extends Phaser.Scene {
 
                     if (inBounds) {
                         // 🌟 核心防禦：如果這框已經被別人佔用，或者這分子已經佔用了別的框，直接跳過！
-                        if (frame.isMet && frame.satisfiedBy && frame.satisfiedBy !== draggingGroup[0]) return;
-                        if (draggingGroup[0].satisfiedFrame && draggingGroup[0].satisfiedFrame !== frame) return;
+                       if (frame.isMet && frame.satisfiedBy && frame.satisfiedBy !== draggingGroup[0]) return;
+                        
+                        // 🌟 修正：只檢查目前「畫面上的有效框」，忽略上一個階段已經消失的舊框！
+                        if (draggingGroup[0].satisfiedFrame && this.activeFrames.includes(draggingGroup[0].satisfiedFrame) && draggingGroup[0].satisfiedFrame !== frame) return;
 
                         let statusCheck = 0;
                         if (frame.monomerType === 'dna_chain') {
