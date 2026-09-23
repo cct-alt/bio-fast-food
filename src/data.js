@@ -14,11 +14,11 @@ export const menuItems = [
     { key: 'ribose', name: '核糖', scale: 0.15, imageOffset: { x: 0, y: 1 }, magnets: [{ x: -1, y: -23 }, { x: 23, y: -5 }, { x: 13, y: 21 }, { x: -16, y: 21 }, { x: -23, y: -3 }] },
     { key: 'deoxyribose', name: '脫氧核糖', scale: 0.15, imageOffset: { x: 1, y: 1 }, magnets: [{ x: 0, y: -22 }, { x: 22, y: -5 }, { x: 14, y: 20 }, { x: -15, y: 22 }, { x: -24, y: -6 }] },
     { key: 'phosphate_group_nucleotide', name: '磷酸鹽基', scale: 0.15, imageOffset: { x: 1, y: 0 }, magnets: [{ x: -2, y: -33 }, { x: 30, y: -2 }, { x: -2, y: 28 }, { x: -33, y: -1 }] },
-    { key: 'base_a', name: '鹼基 A', scale: 0.15, imageOffset: { x: 4, y: 0 }, magnets: [{ x: -1, y: -28 }, { x: -36, y: -1 }, { x: 0, y: 28 }, { x: 40, y: -1 }] },
-    { key: 'base_t', name: '鹼基 T', scale: 0.15, imageOffset: { x: 4, y: 0 }, magnets: [{ x: -35, y: -1 }, { x: -1, y: 30 }, { x: -1, y: -30 }, { x: 25, y: -1 }] },
-    { key: 'base_c', name: '鹼基 C', scale: 0.23, imageOffset: { x: 3, y: -1 }, magnets: [{ x: -36, y: -1 }, { x: -1, y: -30 }, { x: 0, y: 29 }, { x: 21, y: 2 }] },
-    { key: 'base_g', name: '鹼基 G', scale: 0.15, imageOffset: { x: 6, y: -1 }, magnets: [{ x: -36, y: -1 }, { x: -1, y: -29 }, { x: -1, y: 26 }, { x: 44, y: 0 }] },
-    { key: 'base_u', name: '鹼基 U', scale: 0.15, imageOffset: { x: 5, y: -1 }, magnets: [{ x: -1, y: -29 }, { x: -34, y: -3 }, { x: -1, y: 26 }, { x: 26, y: -1 }] }
+    { key: 'base_a', name: '含氮鹼基 A', scale: 0.15, imageOffset: { x: 4, y: 0 }, magnets: [{ x: -1, y: -28 }, { x: -36, y: -1 }, { x: 0, y: 28 }, { x: 40, y: -1 }] },
+    { key: 'base_t', name: '含氮鹼基 T', scale: 0.15, imageOffset: { x: 4, y: 0 }, magnets: [{ x: -35, y: -1 }, { x: -1, y: 30 }, { x: -1, y: -30 }, { x: 25, y: -1 }] },
+    { key: 'base_c', name: '含氮鹼基 C', scale: 0.23, imageOffset: { x: 3, y: -1 }, magnets: [{ x: -36, y: -1 }, { x: -1, y: -30 }, { x: 0, y: 29 }, { x: 21, y: 2 }] },
+    { key: 'base_g', name: '含氮鹼基 G', scale: 0.15, imageOffset: { x: 6, y: -1 }, magnets: [{ x: -36, y: -1 }, { x: -1, y: -29 }, { x: -1, y: 26 }, { x: 44, y: 0 }] },
+    { key: 'base_u', name: '含氮鹼基 U', scale: 0.15, imageOffset: { x: 5, y: -1 }, magnets: [{ x: -1, y: -29 }, { x: -34, y: -3 }, { x: -1, y: 26 }, { x: 26, y: -1 }] }
 ];
 
 export const orderDatabase = [

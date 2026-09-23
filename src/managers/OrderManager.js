@@ -177,11 +177,11 @@ export default class OrderManager {
             this.createFrame('amino_acid', sc3, `單體 3\n(${fmtSC(sc3)})`, 140, 140, cx, 280);
         }
         else if (type === 'dna_nucleotide') {
-            let b = getDNA(); order.name = `DNA 核苷酸\n(配對鹼基 ${this.fmtBase(b)})`; order.req = { 'deoxyribose': 1, 'phosphate_group_nucleotide': 1, [b]: 1 };
+            let b = getDNA(); order.name = `DNA 核苷酸\n(配對含氮鹼基 ${this.fmtBase(b)})`; order.req = { 'deoxyribose': 1, 'phosphate_group_nucleotide': 1, [b]: 1 };
             order.specificKey = b;
         }
         else if (type === 'rna_nucleotide') {
-            let b = getRNA(); order.name = `RNA 核苷酸\n(配對鹼基 ${this.fmtBase(b)})`; order.req = { 'ribose': 1, 'phosphate_group_nucleotide': 1, [b]: 1 };
+            let b = getRNA(); order.name = `RNA 核苷酸\n(配對含氮鹼基 ${this.fmtBase(b)})`; order.req = { 'ribose': 1, 'phosphate_group_nucleotide': 1, [b]: 1 };
             order.specificKey = b;
         }
         else if (type === 'rna_dinucleotide') {
@@ -343,7 +343,7 @@ export default class OrderManager {
                 else if (o === 'dna_nucleotide' || o === 'rna_nucleotide') {
                     let typeStr = o === 'dna_nucleotide' ? 'dna_nucleotide' : 'rna_nucleotide';
                     if (MoleculeLogic.checkMonomer(items, typeStr, scene.currentOrder.specificKey) === 1) isCorrect = true;
-                    else msg = `❌ ${o === 'dna_nucleotide' ? 'DNA' : 'RNA'} 核苷酸結構錯誤！(需核糖正確連接磷酸與鹼基)`;
+                    else msg = `❌ ${o === 'dna_nucleotide' ? 'DNA' : 'RNA'} 核苷酸結構錯誤！(需核糖正確連接磷酸與含氮鹼基)`;
                 }
                 else if (o === 'dna_dinucleotide' || o === 'rna_dinucleotide') {
                     let sugarKey = o === 'dna_dinucleotide' ? 'deoxyribose' : 'ribose';
@@ -371,9 +371,9 @@ export default class OrderManager {
                             let targetSeq = scene.currentOrder.targetSequence;
                             if (actualSeq.join(',') === targetSeq.join(',')) isCorrect = true;
                             else {
-                                msg = `❌ 鹼基順序錯誤！\n訂單要：${targetSeq.map(this.fmtBase).join(' - ')}\n你做的是：${actualSeq.map(this.fmtBase).join(' - ')}`;
+                                msg = `❌ 含氮鹼基順序錯誤！\n訂單要：${targetSeq.map(this.fmtBase).join(' - ')}\n你做的是：${actualSeq.map(this.fmtBase).join(' - ')}`;
                             }
-                        } else { msg = "❌ 鹼基沒有正確連接在五碳糖右上角！"; }
+                        } else { msg = "❌ 含氮鹼基沒有正確連接在五碳糖右上角！"; }
                     }
                 }
                 else if (o === 'dna_double_strand') {
@@ -399,13 +399,13 @@ export default class OrderManager {
                             let bR_Top = getBase(rTop), bR_Bot = getBase(rBot);
 
                             if (!bL1 || !bL2 || !bR_Top || !bR_Bot) {
-                                msg = "❌ 鹼基沒有正確裝在五碳糖上！";
+                                msg = "❌ 含氮鹼基沒有正確裝在五碳糖上！";
                             } else {
                                 let isPair1Linked = bL1.connectedItems.some(c => c.item === bR_Top);
                                 let isPair2Linked = bL2.connectedItems.some(c => c.item === bR_Bot);
 
                                 if (!isPair1Linked || !isPair2Linked) {
-                                    msg = "❌ 左右鹼基沒有互相連結配對！(氫鍵未形成)";
+                                    msg = "❌ 左右含氮鹼基沒有互相連結配對！(氫鍵未形成)";
                                 } else {
                                     let targetLeft = scene.currentOrder.targetSequenceLeft;
                                     let targetRight = scene.currentOrder.targetSequenceRight;
@@ -414,7 +414,7 @@ export default class OrderManager {
                                         bR_Bot.textureKey === targetRight[0] && bR_Top.textureKey === targetRight[1]) {
                                         isCorrect = true;
                                     } else {
-                                        msg = `❌ 鹼基對錯誤！\n訂單要求：左 ${this.fmtBase(targetLeft[0])}-${this.fmtBase(targetLeft[1])}, 右 ${this.fmtBase(targetRight[0])}-${this.fmtBase(targetRight[1])}`;
+                                        msg = `❌ 含氮鹼基對錯誤！\n訂單要求：左 ${this.fmtBase(targetLeft[0])}-${this.fmtBase(targetLeft[1])}, 右 ${this.fmtBase(targetRight[0])}-${this.fmtBase(targetRight[1])}`;
                                     }
                                 }
                             }

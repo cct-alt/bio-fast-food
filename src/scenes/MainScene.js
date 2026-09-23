@@ -229,7 +229,7 @@ export default class MainScene extends Phaser.Scene {
 
             this.previewLine.clear();
             this.currentSnap = null;
-            let closestDistance = 40; 
+            let closestDistance = 55; 
             let draggingGroup = gameObject.moleculeGroup || [gameObject];
 
             gameObject.moleculeGroup.forEach(groupItem => {
@@ -305,7 +305,7 @@ export default class MainScene extends Phaser.Scene {
                 gameObject.list[0].setTint(0xaaaaaa);
                 gameObject.magnets.forEach(m => { if (!m.isUsed) m.visual.setVisible(true); });
 
-                let WS_SCALE = 0.6;
+                let WS_SCALE = 0.75;
                 gameObject.img.setScale(gameObject.itemData.scale * WS_SCALE);
                 gameObject.img.x = gameObject.itemData.imageOffset ? gameObject.itemData.imageOffset.x * WS_SCALE : 0;
                 gameObject.img.y = gameObject.itemData.imageOffset ? gameObject.itemData.imageOffset.y * WS_SCALE : 0;
@@ -403,7 +403,7 @@ export default class MainScene extends Phaser.Scene {
                                     let keyB = targetItem.textureKey;
                                     let isDNAPair = keyA.startsWith('base_') && keyB.startsWith('base_');
 
-                                    if (isPrimarySnap || (isDNAPair && dist < 40)) { 
+                                    if (isPrimarySnap || (isDNAPair && dist < 55)) { 
                                         bondedPairs.add(pairId);
                                         dragMag.isUsed = true; targetMag.isUsed = true;
                                         dragMag.visual.setVisible(false); targetMag.visual.setVisible(false);
@@ -460,8 +460,8 @@ export default class MainScene extends Phaser.Scene {
                                             let kx2 = redSlash.amino.x + (redSlash.aOffset.x * aAngle);
                                             let ky2 = redSlash.amino.y + (redSlash.aOffset.y * aAngle);
 
-                                            redSlash.lineBetween(kx - 8, ky + 8, kx + 8, ky - 8);
-                                            redSlash.lineBetween(kx2 - 8, ky2 + 8, kx2 + 8, ky2 - 8);
+                                            redSlash.lineBetween(kx - 11, ky + 11, kx + 11, ky - 11);
+                                            redSlash.lineBetween(kx2 - 11, ky2 + 11, kx2 + 11, ky2 - 11);
                                             redSlash.setDepth(5);
                                             redSlashes.push(redSlash);
                                         }
@@ -651,7 +651,7 @@ export default class MainScene extends Phaser.Scene {
         this.itemIdCounter++; container.uniqueId = this.itemIdCounter;
 
         // 👉 統一將所有圖形與磁吸點縮放至 60% (原本是 1.0)
-        let WS_SCALE = 0.6;
+        let WS_SCALE = 0.75;
 
         let imgX = data.imageOffset ? data.imageOffset.x * WS_SCALE : 0;
         let imgY = data.imageOffset ? data.imageOffset.y * WS_SCALE : 0;
