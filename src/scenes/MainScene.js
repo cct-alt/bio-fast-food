@@ -40,31 +40,31 @@ export default class MainScene extends Phaser.Scene {
     }
 
 
-        create() {
+    create() {
         this.cameras.main.setBackgroundColor('#f4f7f6');
 
         // ==========================================
-        // 🌟 終極自癒機制：如果發生任何系統干擾，強制重置 Phaser 所有的觸控點
+        // 🌟 終極解法：移除所有死鎖機制，改用「緊急放下 (Emergency Drop)」
+        // 只要 Safari 調皮中斷了觸控，我們就讓分子安全落地，絕對不鎖死！
         // ==========================================
-        const resetAllTouches = () => {
-            // 這是 Phaser 內建的最強重置指令，清空所有幽靈觸控
-            this.input.manager.resetPointers();
-            
-            // 安全放下所有分子
+        const emergencyDrop = () => {
             this.workspaceItems.forEach(item => {
                 if (item && item.type === 'Container') {
-                    if (item.moleculeGroup) item.moleculeGroup.forEach(g => { if (g.setDepth) g.setDepth(1); });
-                    if (item.list && item.list.length > 0 && !item.isLockedChain) item.list[0].clearTint();
+                    if (item.moleculeGroup) {
+                        item.moleculeGroup.forEach(g => { if (g.setDepth) g.setDepth(1); });
+                    }
+                    if (item.list && item.list.length > 0 && !item.isLockedChain) {
+                        item.list[0].clearTint();
+                    }
                 }
             });
             if (this.previewLine) this.previewLine.clear();
             this.currentSnap = null;
         };
 
-        // 當觸控被系統取消、滑出界外、或遊戲失去焦點時，立刻重置！
-        this.input.on('pointercancel', resetAllTouches);
-        this.input.on('pointerupoutside', resetAllTouches);
-        this.input.on('gameout', resetAllTouches);
+        this.input.on('pointerupoutside', emergencyDrop);
+        this.input.on('pointercancel', emergencyDrop);
+        this.input.on('gameout', emergencyDrop);
         // ==========================================
 
         const grid = this.add.graphics();
@@ -79,7 +79,7 @@ export default class MainScene extends Phaser.Scene {
         this.add.text(20, 55, '💡 提示：在分子上「連續點擊兩下」可反轉 180 度', { fontSize: '14px', fill: '#e67e22', fontStyle: 'bold', backgroundColor: '#fff3e0', padding: { x: 8, y: 4 } });
 
         this.score = 0;
-        this.scoreText = this.add.text(20, 95, '💰 營業額: $0', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '22px', fill: '#27ae60', fontStyle: 'bold', backgroundColor: '#e8f8f5', padding: { x: 10, y: 5 }, borderRadius: 8 });
+        this.scoreText = this.add.text(20, 95, '💰 營業額: \$0', { fontFamily: '"微軟正黑體", sans-serif', fontSize: '22px', fill: '#27ae60', fontStyle: 'bold', backgroundColor: '#e8f8f5', padding: { x: 10, y: 5 }, borderRadius: 8 });
 
         let recipeBtn = this.add.text(20, 140, '📚 查看食譜', {
             fontFamily: '"微軟正黑體", sans-serif', fontSize: '18px', fill: '#ffffff',
@@ -196,6 +196,9 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 拖曳移動事件 (drag)
+        // ==========================================
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
             if (gameObject.type !== 'Container' || gameObject.isOriginal) return;
             let dx = dragX - gameObject.x; let dy = dragY - gameObject.y;
@@ -220,8 +223,9 @@ export default class MainScene extends Phaser.Scene {
                             let ax = item.amino.x + (item.aOffset.x * aAngle);
                             let ay = item.amino.y + (item.aOffset.y * aAngle);
 
-                            item.lineBetween(cx - 8, cy + 8, cx + 8, cy - 8);
-                            item.lineBetween(ax - 8, ay + 8, ax + 8, ay - 8);
+                            // 👉 叉叉放大：原本是 8，放大為 11
+                            item.lineBetween(cx - 11, cy + 11, cx + 11, cy - 11);
+                            item.lineBetween(ax - 11, ay + 11, ax + 11, ay - 11);
                         }
                     }
                 });
@@ -229,7 +233,7 @@ export default class MainScene extends Phaser.Scene {
 
             this.previewLine.clear();
             this.currentSnap = null;
-            let closestDistance = 55; 
+            let closestDistance = 55; // 👉 寬容度放大：配合圖形變大，設為 55
             let draggingGroup = gameObject.moleculeGroup || [gameObject];
 
             gameObject.moleculeGroup.forEach(groupItem => {
@@ -282,20 +286,11 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 開始拖曳事件 (dragstart)
+        // ==========================================
         this.input.on('dragstart', (pointer, gameObject) => {
             if (gameObject.type !== 'Container') return;
-            let group = gameObject.moleculeGroup || [gameObject];
-            if (this.activeFrames) {
-                this.activeFrames.forEach(frame => {
-                    if (frame.satisfiedBy === group[0]) {
-                        frame.isMet = false;
-                        frame.satisfiedBy = null;
-                        frame.rect.setStrokeStyle(2, 0x95a5a6);
-                        frame.status.setText('未完成').setColor('#e74c3c');
-                        group.forEach(gItem => gItem.isValidatedMonomer = false);
-                    }
-                });
-            }
             if (gameObject.moleculeGroup) {
                 gameObject.moleculeGroup.forEach(item => { if (item.setDepth) item.setDepth(10); });
             }
@@ -305,6 +300,7 @@ export default class MainScene extends Phaser.Scene {
                 gameObject.list[0].setTint(0xaaaaaa);
                 gameObject.magnets.forEach(m => { if (!m.isUsed) m.visual.setVisible(true); });
 
+                // 👉 圖形放大：原本 0.6，放大至 0.75
                 let WS_SCALE = 0.75;
                 gameObject.img.setScale(gameObject.itemData.scale * WS_SCALE);
                 gameObject.img.x = gameObject.itemData.imageOffset ? gameObject.itemData.imageOffset.x * WS_SCALE : 0;
@@ -326,6 +322,9 @@ export default class MainScene extends Phaser.Scene {
             }
         });
 
+        // ==========================================
+        // 🌟 結束拖曳事件 (dragend)
+        // ==========================================
         this.input.on('dragend', (pointer, gameObject) => {
             if (gameObject.type !== 'Container') return;
             if (gameObject.moleculeGroup) {
@@ -403,6 +402,7 @@ export default class MainScene extends Phaser.Scene {
                                     let keyB = targetItem.textureKey;
                                     let isDNAPair = keyA.startsWith('base_') && keyB.startsWith('base_');
 
+                                    // 👉 寬容度放大：配合圖形變大，改為 55
                                     if (isPrimarySnap || (isDNAPair && dist < 55)) { 
                                         bondedPairs.add(pairId);
                                         dragMag.isUsed = true; targetMag.isUsed = true;
@@ -460,6 +460,7 @@ export default class MainScene extends Phaser.Scene {
                                             let kx2 = redSlash.amino.x + (redSlash.aOffset.x * aAngle);
                                             let ky2 = redSlash.amino.y + (redSlash.aOffset.y * aAngle);
 
+                                            // 👉 叉叉放大：原本是 8，放大為 11
                                             redSlash.lineBetween(kx - 11, ky + 11, kx + 11, ky - 11);
                                             redSlash.lineBetween(kx2 - 11, ky2 + 11, kx2 + 11, ky2 - 11);
                                             redSlash.setDepth(5);
@@ -532,26 +533,13 @@ export default class MainScene extends Phaser.Scene {
                 let groupCx = (minX + maxX) / 2;
                 let groupCy = (minY + maxY) / 2;
 
-                            if (this.requiresMonomerAssembly || (this.currentOrder && this.currentOrder.id === 'dna_double_strand')) {
-                let draggingGroup = gameObject.moleculeGroup;
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                draggingGroup.forEach(g => {
-                    if (g.type === 'Container') { minX = Math.min(minX, g.x); maxX = Math.max(maxX, g.x); minY = Math.min(minY, g.y); maxY = Math.max(maxY, g.y); }
-                });
-                let groupCx = (minX + maxX) / 2;
-                let groupCy = (minY + maxY) / 2;
-
-                // 🌟 新增：確保一個分子只能滿足「一個」檢查框
-                let claimed = false; 
-
                 this.activeFrames.forEach(frame => {
-                    if (claimed) return; // 如果這個分子剛剛已經填滿了某個框，就不准再觸發第二個！
-
                     let inBounds = Math.abs(groupCx - frame.x) < (frame.width / 2) && Math.abs(groupCy - frame.y) < (frame.height / 2);
 
                     if (inBounds) {
-                        // 🌟 新增：如果這個檢查框已經被「其他」分子佔用了，就不准覆蓋它！
+                        // 🌟 核心防禦：如果這框已經被別人佔用，或者這分子已經佔用了別的框，直接跳過！
                         if (frame.isMet && frame.satisfiedBy && frame.satisfiedBy !== draggingGroup[0]) return;
+                        if (draggingGroup[0].satisfiedFrame && draggingGroup[0].satisfiedFrame !== frame) return;
 
                         let statusCheck = 0;
                         if (frame.monomerType === 'dna_chain') {
@@ -562,9 +550,9 @@ export default class MainScene extends Phaser.Scene {
 
                         if (statusCheck === 1 && !frame.isMet) {
                             frame.isMet = true;
-                            frame.satisfiedBy = draggingGroup[0]; // 🌟 記錄這個框是被「誰」滿足的
-                            claimed = true; // 🌟 標記這個分子已經用掉了
-                            
+                            frame.satisfiedBy = draggingGroup[0]; // 綁定
+                            draggingGroup[0].satisfiedFrame = frame; // 綁定
+
                             frame.rect.setStrokeStyle(4, 0x2ecc71);
                             frame.status.setText('✅ 已完成').setColor('#2ecc71');
                             draggingGroup.forEach(gItem => gItem.isValidatedMonomer = true);
@@ -576,19 +564,17 @@ export default class MainScene extends Phaser.Scene {
                             }
                         } else if (statusCheck === -1) {
                             frame.isMet = false;
-                            frame.satisfiedBy = null; // 🌟 清除記錄
+                            frame.satisfiedBy = null; // 解除綁定
+                            draggingGroup[0].satisfiedFrame = null; // 解除綁定
+                            
                             frame.rect.setStrokeStyle(4, 0xe74c3c);
                             frame.status.setText('❌ 錯位').setColor('#e74c3c');
                         }
                     }
                 });
             }
-
-            }
         });
     }
-
-
 
 
 
